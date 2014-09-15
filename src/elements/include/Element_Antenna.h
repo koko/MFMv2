@@ -156,14 +156,14 @@ namespace MFM
 	//if not, we aren't coding your behavior right now, see ya
 	//TODO: Fix that lack of behavior. (Note: this limits length to the event window of #1! oops. fix that soon.)
 	//TODO: have this 'bounce' light for all antennae
-	//if (ourIndex != 100) {
+	//if (ourIndex != 1) {
 	//	LOG.Debug("damned thing\n");
-	//	return;
-	//}
+//		return;
+//	}
 	//else, you are #1! get to work.
 	//TODO: get this to work for any direction, instead of just "directly right"
 	//for (u32 i = md.GetFirstIndex(0); i<= md.GetLastIndex(2); i++){
-	for (u32 i = 1; i <= antennaLength; i++){
+	for (s32 i = 1; i <= antennaLength; i++){
 		const SPoint& rel = SPoint(i,-i);
 		window.SetRelativeAtom(rel,Element_Antenna<CC>::THE_INSTANCE.GetDefaultAtom());
 
