@@ -90,6 +90,12 @@ namespace MFM
 	{
 		return THE_INSTANCE.GetType();
 	}
+	virtual const T& GetDefaultAtom() const{
+		static T defaultAtom(TYPE(),0,0,0);
+		this->SetIndex(defaultAtom,1);
+		this->SetAntennaLength(defaultAtom,5);
+		return defaultAtom;
+	}
 
     Element_Antenna()
       : Element<CC>(MFM_UUID_FOR("Antenna", ARRAY_VERSION)),
@@ -127,7 +133,7 @@ namespace MFM
       return "The antenna object is meant to be constructed into lines of antennae by Lens objects. Then, Light atoms striking the antennae from the front should bounce off.";
     }
 
-	T& NewAtomWithIndex(s32 index){
+	T& NewAtomWithIndex(s32 index) const{
 		static T newAtom(TYPE(),0,0,0);
 		SetIndex(newAtom,index);
 
@@ -150,30 +156,26 @@ namespace MFM
 	
 	//First we need to know if this is the 1st atom.
 	const T& atom = window.GetCenterAtom();
-	//s32 ourIndex = AntIndex::Read(this->GetBits(atom));
+	s32 ourIndex = AntIndex::Read(this->GetBits(atom));
 	s32 antennaLength = AntennaLength::Read(this->GetBits(atom));
-	antennaLength = 5;
+	
+	//antennaLength = 5;
 	//if not, we aren't coding your behavior right now, see ya
 	//TODO: Fix that lack of behavior. (Note: this limits length to the event window of #1! oops. fix that soon.)
 	//TODO: have this 'bounce' light for all antennae
-	//if (ourIndex != 1) {
+	if (ourIndex != 1) {
 	//	LOG.Debug("damned thing\n");
-//		return;
-//	}
+		if(antennaLength != 0){}
+		return;
+	}
 	//else, you are #1! get to work.
 	//TODO: get this to work for any direction, instead of just "directly right"
-	//for (u32 i = md.GetFirstIndex(0); i<= md.GetLastIndex(2); i++){
+
 	for (s32 i = 1; i <= antennaLength; i++){
 		const SPoint& rel = SPoint(i,-i);
 		window.SetRelativeAtom(rel,Element_Antenna<CC>::THE_INSTANCE.GetDefaultAtom());
 
 	}
-//	for(s32 i = 1; i<= antennaLength; i++){
-		//put antenna at (myX+i,myY+i) (maybe negative as well?)
-		//this is the offset from our current location
-//		const SPoint& rel = SPoint(i,i);
-//		window.SetRelativeAtom(rel, Element_Lens<CC>::THE_INSTANCE.GetDefaultAtom());
-		
 
 		//s32 x = GetIndex(atom);
 		//const T& newAtom = Element_Antenna<CC>::THE_INSTANCE.GetDefaultAtom();
@@ -184,13 +186,6 @@ namespace MFM
 		//const T& otherAtom = window.GetRelativeAtom(rel);
 		//SetIndex(otherAtom,i+1);
 //	}
-
-	/* the tutorial loop is too much for our purposes. We actually know the locations we want to look at. But how do we translate that into md-speak?
-	for (u32 i = md.GetFirstIndex(0); i <= md.GetLastIndex(R); i++){
-		const SPoint& rel = md.GetPoint(i);
-		const T& atom = window.GetRelativeAtom(rel);
-		if (
-	}*/
     }
   };
 
