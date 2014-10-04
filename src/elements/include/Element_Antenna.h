@@ -93,7 +93,8 @@ namespace MFM
 	virtual const T& GetDefaultAtom() const{
 		static T defaultAtom(TYPE(),0,0,0);
 		this->SetIndex(defaultAtom,1);
-		this->SetAntennaLength(defaultAtom,5);
+		s32 antL = m_antennaLength.GetValue();
+		this->SetAntennaLength(defaultAtom,antL);
 		return defaultAtom;
 	}
 
@@ -159,7 +160,7 @@ namespace MFM
 	s32 ourIndex = AntIndex::Read(this->GetBits(atom));
 	s32 antennaLength = AntennaLength::Read(this->GetBits(atom));
 	
-	//antennaLength = 5;
+	antennaLength = 5;
 	//if not, we aren't coding your behavior right now, see ya
 	//TODO: Fix that lack of behavior. (Note: this limits length to the event window of #1! oops. fix that soon.)
 	//TODO: have this 'bounce' light for all antennae
@@ -172,10 +173,14 @@ namespace MFM
 	//TODO: get this to work for any direction, instead of just "directly right"
 
 	for (s32 i = 1; i <= antennaLength; i++){
-		const SPoint& rel = SPoint(i,-i);
-		window.SetRelativeAtom(rel,Element_Antenna<CC>::THE_INSTANCE.GetDefaultAtom());
-
+		//const SPoint& rel = SPoint(i,-i);
+		
+//window.SetRelativeAtom(rel,Element_Antenna<CC>::THE_INSTANCE.GetDefaultAtom());
+		//T& newAtom = NewAtomWithIndex(i+1);
+		const T& newAtom = Element_Lens<CC>::THE_INSTANCE.GetDefaultAtom();
+		window.SetRelativeAtom(SPoint(i,i),newAtom);
 	}
+	//window.SetRelativeAtom(SPoint(0,0),Element_Antenna<CC>::THE_INSTANCE.GetDefaultAtom());
 
 		//s32 x = GetIndex(atom);
 		//const T& newAtom = Element_Antenna<CC>::THE_INSTANCE.GetDefaultAtom();
