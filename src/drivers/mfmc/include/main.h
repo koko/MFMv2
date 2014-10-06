@@ -12,5 +12,6 @@
 #include "Element_Creg.h"
 #include "Element_Lens.h"
 #include "Element_Antenna.h"
+#include "Element_Box.h"
 
 #endif /* MAIN_H */
