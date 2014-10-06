@@ -52,9 +52,10 @@ namespace MFM
 	 BITS = P::BITS_PER_ATOM,
 
 	 BOX_BUILDING  = P3Atom<P>::P3_STATE_BITS_POS,
-	 BLD_PARAM_LEN = 1
+	 BLD_PARAM_LEN = 3
 	//We'll use a 0 to mean "not building"
-	//& a 1 to mean "building".
+	//& a 1 to mean "building down",
+	//  a 2 to mean "building left",
 //TODO: figure out parameters, if any
 	 };
 	
@@ -140,13 +141,52 @@ namespace MFM
 	const T& newAtom = Element_Box<CC>::THE_INSTANCE.GetDefaultAtom();
 	const SPoint& rel = SPoint(1,-1); //This is the space to the up and right from our current atom's position.
 	s32 isBuilding = GetIsBuilding(us);
+//1 means down, 2 means left
 	if (isBuilding == 1){
 		//if it's building, let's move it down.
 		//TODO: have this check for location!
+		const SPoint& downRel = SPoint(0,1);
+		const T& otherAtom = window.GetRelativeAtom(downRel);
+		//if(window.IsLiveSite(downRel)){
+		if(window.IsLiveSite(downRel) && otherAtom.GetType() == Element_Empty<CC>::THE_INSTANCE.GetDefaultAtom().GetType()){
+			T& newAtom = NewAtomIsBuilding(isBuilding);
+			window.SetRelativeAtom(downRel,newAtom);
+		}
+	//If we're out of room to go down, go left.
+		else if (!window.IsLiveSite(downRel)){
+			s32 x = 2;
+			T& newAtom = NewAtomIsBuilding(x);
+			window.SetCenterAtom(newAtom);
+		}
+	}
+	//this is building left
+	else if (isBuilding == 2){
+		const SPoint& leftRel = SPoint(-1,0);
 		T& newAtom = NewAtomIsBuilding(isBuilding);
-		const SPoint& down = SPoint(0,1);
-		window.SetRelativeAtom(down,newAtom);
-		//Hey great! it works!
+		if (window.IsLiveSite(leftRel))
+			window.SetRelativeAtom(leftRel,newAtom);
+		else{
+		s32 x = 3;
+		newAtom = NewAtomIsBuilding(x);
+		window.SetCenterAtom(newAtom);
+		}
+	}
+	else if (isBuilding == 3){
+		const SPoint& upRel = SPoint(0,-1);
+		T& newAtom = NewAtomIsBuilding(isBuilding);
+		if (window.IsLiveSite(upRel))
+			window.SetRelativeAtom(upRel,newAtom);
+		else{
+			s32 x = 4;
+			newAtom = NewAtomIsBuilding(x);
+			window.SetCenterAtom(newAtom);
+		}
+	}
+	else if (isBuilding == 4){
+		const SPoint& rightRel = SPoint(1,0);
+		T& newAtom = NewAtomIsBuilding(isBuilding);
+		if (window.IsLiveSite(rightRel))
+			window.SetRelativeAtom(rightRel,newAtom);
 	}
 	else if (window.IsLiveSite(rel)){
 		//const T& newAtom = Element_Box<CC>::THE_INSTANCE.GetDefaultAtom();

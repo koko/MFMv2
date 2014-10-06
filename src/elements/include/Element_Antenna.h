@@ -1,5 +1,6 @@
 /*
   Element_Antenna.h Definition of an antenna element in the Data Array project.
+
   Copyright (C) 2014 The Regents of the University of New Mexico.  All rights reserved.
 
   This library is free software; you can redistribute it and/or
@@ -19,7 +20,7 @@
 */
 
 /**
-  \file   Element_Antenna.h Element which acts as antenna in the array.
+  \file   Element_Box.h Element which acts as surrounding sensing container for the array.
   \author Ronnie J. H. Garduno
   \date (C) 2014 All rights reserved.
   \lgpl
@@ -33,8 +34,6 @@
 #include "itype.h"
 #include "P3Atom.h"
 
-#include "Element_Lens.h"
-
 namespace MFM
 {
 
@@ -46,40 +45,33 @@ namespace MFM
     // Extract short names for parameter types
     typedef typename CC::ATOM_TYPE T;
     typedef typename CC::PARAM_CONFIG P;
+	//Right now, there is one parameter that tells the box atom whether or not it's exploring or building the box walls.
+	//Another will tell it which way to go, maybe.
     enum {
 	 R = P::EVENT_WINDOW_RADIUS,
 	 BITS = P::BITS_PER_ATOM,
-	 ANTENNA_POS = P3Atom<P>::P3_STATE_BITS_POS,
-	 ANTENNA_LEN = 4,
-	 TOTAL_POS = ANTENNA_POS + ANTENNA_LEN,
-	 TOTAL_LEN = 4 
 
-//TODO: figure out parameters
-// Here is where we'll remember which part of the antenna this atom is,
-// As well as how long this particular antenna is. (Make global?)
-//ANTENNA_LEN = 4 => max antenna size is 2^4 - 1 = 15. Might enlarge.
+	 //BOX_BUILDING  = P3Atom<P>::P3_STATE_BITS_POS,
+	 //BLD_PARAM_LEN = 3
+	
+	ANT_LENGTH  = P3Atom<P>::P3_STATE_BITS_POS,
+	ANT_LEN_LEN = 3		
+
+	//Let's use this to determine how far out the antenna builds. 
+//TODO: figure out parameters, if any
 	 };
 	
-	typedef BitField<BitVector<BITS>, ANTENNA_LEN,ANTENNA_POS> AntIndex;	
-	typedef BitField<BitVector<BITS>, TOTAL_LEN, TOTAL_POS> AntennaLength;
+	typedef BitField<BitVector<BITS>, ANT_LEN_LEN, ANT_LENGTH> AntennaLength;
+	//typedef BitField<BitVector<BITS>, BLD_PARAM_LEN,BOX_BUILDING> IsBuilding;	
 
   private:
-//TODO: consider whether or not to leave this as a global parameter.
-    ElementParameterS32<CC> m_antennaLength;
-
-	s32 GetIndex(const T& us) const{
-		return AntIndex::Read(this->GetBits(us));
-	}
-
-	void SetIndex(T& us, const s32 index) const{
-		AntIndex::Write(this->GetBits(us),index);
-	}
 
 	s32 GetAntennaLength(const T& us) const{
 		return AntennaLength::Read(this->GetBits(us));
 	}
+
 	void SetAntennaLength(T& us, const s32 length) const{
-		AntennaLength::Write(this->GetBits(us),length);
+		AntennaLength::Write(this->GetBits(us), length);
 	}
 
   public:
@@ -92,18 +84,16 @@ namespace MFM
 	}
 	virtual const T& GetDefaultAtom() const{
 		static T defaultAtom(TYPE(),0,0,0);
-		this->SetIndex(defaultAtom,1);
-		s32 antL = m_antennaLength.GetValue();
-		this->SetAntennaLength(defaultAtom,antL);
+		//TODO: figure out how to use slider value for length!
+		SetAntennaLength(defaultAtom,5);
+		//By default, box atoms are busy travelling to the corner of the world, not building boxes.
 		return defaultAtom;
 	}
 
     Element_Antenna()
-      : Element<CC>(MFM_UUID_FOR("Antenna", ARRAY_VERSION)),
+      : Element<CC>(MFM_UUID_FOR("Antenna", ARRAY_VERSION))
         /* <<TEMPLATE>> Initialize all configurable parameters here. */
 	//TODO: remove this if you remove the parameter it's assoc'd with
-        m_antennaLength(this, "length", "Antenna length",
-                  "This parameter regulates the length of the two antenna arms which the lens builds and uses.", 1, 5, 10, 1)
     {
       Element<CC>::SetAtomicSymbol("An");
       Element<CC>::SetName("Antenna");
@@ -117,7 +107,7 @@ namespace MFM
 
     virtual u32 DefaultPhysicsColor() const
     {
-      return 0xffffbbbb;
+      return 0xFFF00000;
     }
 
     /*
@@ -126,77 +116,33 @@ namespace MFM
      */
     virtual u32 DefaultLowlightColor() const
     {
-      return 0xff772222;
+      return 0x77700000;
+
     }
 
     virtual const char* GetDescription() const
     {
-      return "The antenna object is meant to be constructed into lines of antennae by Lens objects. Then, Light atoms striking the antennae from the front should bounce off.";
+      return "";
     }
 
-	T& NewAtomWithIndex(s32 index) const{
+	T& NewAtomWithLength(s32 lengthVal) const{
 		static T newAtom(TYPE(),0,0,0);
-		SetIndex(newAtom,index);
+		SetAntennaLength(newAtom,lengthVal);
 
 		return newAtom;
 	}
 
-    /*
-      <<TEMPLATE>> This method is executed every time an atom of your
-                   element is chosen for an event. See the tutorial in
-                   the wiki for further information.
-     */
-	/* OK, the basic idea of the antenna is that it should have a direction it points in, and it should 'bounce' light cells which run into it coming from that direction. Moreover, it should constantly check for the other antennae it should know about and which it can see in its event window, (re)generating them if it doesn't see them. Let's say, for now, that each neighbor should be 1 step above (below) the currentAtom, as well as 1 step to the right (left) of it, in a diagonal pattern.
-	*/
-	//For Right Now, we'll focus on growing from the 1st atom out.
+	//For Right Now, we'll focus on growing from the center outwards. The idea is that the box will keep moving itself and its brethren out until it hits the edge of the world.
+	//TODO: Figure out how to see we've hit the edge!
+	//It looks like the trick is to get a tile-specific coordinate for each space, and ask the Grid via IsLegaTileIndex.
+	//Let's try to get it to move up to the top-right corner.
     virtual void Behavior(EventWindow<CC>& window) const
     {
-	//Let's only look at the md = 2 case right now...
 //	const MDist<R> md = MDist<R>::get();
-	const MDist<2> md = MDist<2>::get();
 	
-	//First we need to know if this is the 1st atom.
-	const T& atom = window.GetCenterAtom();
-	s32 ourIndex = AntIndex::Read(this->GetBits(atom));
-	s32 antennaLength = AntennaLength::Read(this->GetBits(atom));
-	
-	antennaLength = 5;
-	//if not, we aren't coding your behavior right now, see ya
-	//TODO: Fix that lack of behavior. (Note: this limits length to the event window of #1! oops. fix that soon.)
-	//TODO: have this 'bounce' light for all antennae
-	if (ourIndex != 1) {
-	//	LOG.Debug("damned thing\n");
-		if(antennaLength != 0){}
-		return;
-	}
-	//else, you are #1! get to work.
-	//TODO: get this to work for any direction, instead of just "directly right"
-
-	for (s32 i = 1; i <= antennaLength; i++){
-		//const SPoint& rel = SPoint(i,-i);
-		
-//window.SetRelativeAtom(rel,Element_Antenna<CC>::THE_INSTANCE.GetDefaultAtom());
-		//T& newAtom = NewAtomWithIndex(i+1);
-		const T& newAtom = Element_Lens<CC>::THE_INSTANCE.GetDefaultAtom();
-		window.SetRelativeAtom(SPoint(i,i),newAtom);
-	}
-	//window.SetRelativeAtom(SPoint(0,0),Element_Antenna<CC>::THE_INSTANCE.GetDefaultAtom());
-
-		//s32 x = GetIndex(atom);
-		//const T& newAtom = Element_Antenna<CC>::THE_INSTANCE.GetDefaultAtom();
-		//SetIndex(newAtom,i+1);
-		//T& newAtom = 
-		//NewAtomWithIndex(x);
-		//window.SetRelativeAtom(rel,newAtom);
-		//const T& otherAtom = window.GetRelativeAtom(rel);
-		//SetIndex(otherAtom,i+1);
-//	}
     }
-  };
-
-  /*
-     <<TEMPLATE>> Rename the class names here to the class name of your element.
-  */
+	
+};
   template <class CC>
   Element_Antenna<CC> Element_Antenna<CC>::THE_INSTANCE;
 
