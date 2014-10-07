@@ -89,6 +89,7 @@ namespace MFM
     virtual const T & GetDefaultAtom() const
     {
       static T defaultAtom(TYPE(),0,0,0);
+	this->SetDirection(defaultAtom,m_direction.GetValue());
       return defaultAtom;
     }
 
@@ -124,9 +125,10 @@ namespace MFM
     virtual void Behavior(EventWindow<CC>& window) const
     {
 //	const MDist<R> md = MDist<R>::get();
-//	const T& thisAtom = window.GetCenterAtom(); 
+	const T& thisAtom = window.GetCenterAtom(); 
       int dir = 0; // a stand-in for the s32 so we can switch on it's value.
-	dir = m_direction.GetValue();
+	
+	dir = this->GetDirection(thisAtom);
 	T otherAtomForward;
 	T otherAtomBackward;
 	const SPoint& relLeft	= SPoint(-1,0);
