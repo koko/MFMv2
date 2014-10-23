@@ -22,7 +22,6 @@
 /**
   \file Light.h, a pair of atoms which travels in one direction indefinitely.
   \author Ronnie Garduno
-  \author Dave Ackley
   \date (C) 2014 All rights reserved.
   \lgpl
  */

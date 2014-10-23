@@ -13,5 +13,7 @@
 #include "Element_Lens.h"
 #include "Element_Antenna.h"
 #include "Element_Box.h"
+#include "Element_Light.h"
+#include "Element_LEmitter.h"
 
 #endif /* MAIN_H */

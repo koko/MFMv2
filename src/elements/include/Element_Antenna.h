@@ -20,7 +20,7 @@
 */
 
 /**
-  \file   Element_Box.h Element which acts as surrounding sensing container for the array.
+  \file   Element_Antenna.h Element which acts as antenna walls for the array.
   \author Ronnie J. H. Garduno
   \date (C) 2014 All rights reserved.
   \lgpl
@@ -45,26 +45,27 @@ namespace MFM
     // Extract short names for parameter types
     typedef typename CC::ATOM_TYPE T;
     typedef typename CC::PARAM_CONFIG P;
-	//Right now, there is one parameter that tells the box atom whether or not it's exploring or building the box walls.
-	//Another will tell it which way to go, maybe.
+//TODO: comments, more parameters
     enum {
 	 R = P::EVENT_WINDOW_RADIUS,
 	 BITS = P::BITS_PER_ATOM,
 
-	 //BOX_BUILDING  = P3Atom<P>::P3_STATE_BITS_POS,
-	 //BLD_PARAM_LEN = 3
-	
 	ANT_LENGTH  = P3Atom<P>::P3_STATE_BITS_POS,
-	ANT_LEN_LEN = 3		
+	ANT_LEN_LEN = 4,
+	ANT_DIR	    = ANT_LENGTH + ANT_LEN_LEN,
+	ANT_DIR_LEN = 3
 
 	//Let's use this to determine how far out the antenna builds. 
-//TODO: figure out parameters, if any
+	//TODO: Add some direction bits to tell it which way to build out (just goes up and right now)
 	 };
 	
 	typedef BitField<BitVector<BITS>, ANT_LEN_LEN, ANT_LENGTH> AntennaLength;
+	typedef BitField<BitVector<BITS>, ANT_DIR_LEN, ANT_DIR> AntennaDirection;
 	//typedef BitField<BitVector<BITS>, BLD_PARAM_LEN,BOX_BUILDING> IsBuilding;	
 
   private:
+
+    	ElementParameterS32<CC> m_AntLen;
 
 	s32 GetAntennaLength(const T& us) const{
 		return AntennaLength::Read(this->GetBits(us));
@@ -85,15 +86,14 @@ namespace MFM
 	virtual const T& GetDefaultAtom() const{
 		static T defaultAtom(TYPE(),0,0,0);
 		//TODO: figure out how to use slider value for length!
-		SetAntennaLength(defaultAtom,5);
-		//By default, box atoms are busy travelling to the corner of the world, not building boxes.
+		SetAntennaLength(defaultAtom,1);
 		return defaultAtom;
 	}
 
     Element_Antenna()
-      : Element<CC>(MFM_UUID_FOR("Antenna", ARRAY_VERSION))
+      : Element<CC>(MFM_UUID_FOR("Antenna", ARRAY_VERSION)),
+        m_AntLen(this, "length", "Antenna Length", "This parameter indicates the number of antenna atoms in a constructed antenna arm.", 1, 5, 16, 1)
         /* <<TEMPLATE>> Initialize all configurable parameters here. */
-	//TODO: remove this if you remove the parameter it's assoc'd with
     {
       Element<CC>::SetAtomicSymbol("An");
       Element<CC>::SetName("Antenna");
@@ -132,14 +132,17 @@ namespace MFM
 		return newAtom;
 	}
 
-	//For Right Now, we'll focus on growing from the center outwards. The idea is that the box will keep moving itself and its brethren out until it hits the edge of the world.
-	//TODO: Figure out how to see we've hit the edge!
-	//It looks like the trick is to get a tile-specific coordinate for each space, and ask the Grid via IsLegaTileIndex.
-	//Let's try to get it to move up to the top-right corner.
     virtual void Behavior(EventWindow<CC>& window) const
     {
 //	const MDist<R> md = MDist<R>::get();
-	
+	const T& thisAtom = window.GetCenterAtom();
+	s32 myLength = GetAntennaLength(thisAtom);
+	//TODO: Get this using the slider value!
+	if(myLength < m_AntLen.GetValue()){
+		T& newAtom = NewAtomWithLength(myLength+1);
+		const SPoint& rel = SPoint(1,-1);
+		window.SetRelativeAtom(rel,newAtom);
+	}
     }
 	
 };

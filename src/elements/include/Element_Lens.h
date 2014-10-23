@@ -32,6 +32,7 @@
 #include "ElementTable.h"
 #include "itype.h"
 
+#include "Element_Antenna.h"
 namespace MFM
 {
 
@@ -100,6 +101,11 @@ namespace MFM
      */
     virtual void Behavior(EventWindow<CC>& window) const
     {
+	//TODO: make this work!
+	//make two antenna elements, set their direction bits.
+	const SPoint& rel = SPoint(1,-1);
+	const T& antAtom = Element_Antenna<CC>::THE_INSTANCE.GetDefaultAtom();
+	window.SetRelativeAtom(rel,antAtom);
     }
   };
 

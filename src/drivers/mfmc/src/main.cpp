@@ -63,6 +63,8 @@ namespace MFM
       this->NeedElement(&Element_Lens<CC>::THE_INSTANCE);
       this->NeedElement(&Element_Antenna<CC>::THE_INSTANCE);
       this->NeedElement(&Element_Box<CC>::THE_INSTANCE);
+      this->NeedElement(&Element_Light<CC>::THE_INSTANCE);
+      this->NeedElement(&Element_LEmitter<CC>::THE_INSTANCE);
     }
 
   public:
