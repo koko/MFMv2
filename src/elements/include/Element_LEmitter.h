@@ -125,21 +125,79 @@ namespace MFM
     virtual void Behavior(EventWindow<CC>& window) const
     {
 //	const MDist<R> md = MDist<R>::get();
-/*	const T& thisAtom = window.GetCenterAtom(); 
+	const T& thisAtom = window.GetCenterAtom(); 
         int dir = 0;
 	
 	dir = this->GetDirection(thisAtom);
-	T otherAtomForward;
-	T otherAtomBackward;
-	const SPoint& relLeft	= SPoint(-1,0);
-	const SPoint& relUpL 	= SPoint(-1,-1);
-	const SPoint& relUp	= SPoint(0,-1);
-	const SPoint& relUpR	= SPoint(1,-1);
-	const SPoint& relRight  = SPoint(1,0);
-	const SPoint& relDownR	= SPoint(1,1);
-	const SPoint& relDown   = SPoint(0,1);
-	const SPoint& relDownL	= SPoint(-1,1);
-*/
+	T otherAtom;
+	//These are out 2 from the emitter.
+	const SPoint& relLeft	= SPoint(-2,0);
+	const SPoint& relUpL 	= SPoint(-2,-2);
+	const SPoint& relUp	= SPoint(0,-2);
+	const SPoint& relUpR	= SPoint(2,-2);
+	const SPoint& relRight  = SPoint(2,0);
+	const SPoint& relDownR	= SPoint(2,2);
+	const SPoint& relDown   = SPoint(0,2);
+	const SPoint& relDownL	= SPoint(-2,2);
+	
+	switch (dir){
+		case 0:
+			otherAtom = window.GetRelativeAtom(relLeft);
+			break;
+		case 1:
+			otherAtom = window.GetRelativeAtom(relUpL);
+			break;
+		case 2:
+			otherAtom = window.GetRelativeAtom(relUp);
+			break;
+		case 3:
+			otherAtom = window.GetRelativeAtom(relUpR);
+			break;
+		case 4:
+			otherAtom = window.GetRelativeAtom(relRight);
+			break;
+		case 5:
+			otherAtom = window.GetRelativeAtom(relDownR);
+			break;
+		case 6:
+			otherAtom = window.GetRelativeAtom(relDown);
+			break;
+		case 7:
+			otherAtom = window.GetRelativeAtom(relDownL);
+			break;
+	}
+	
+	u32 otherType = otherAtom.GetType();
+ 	if (! Element_Light<CC>::THE_INSTANCE.IsType(otherType)){
+		otherAtom = Element_Light<CC>::THE_INSTANCE.NewAtomWithDir(dir);
+		switch(dir){
+			case 0:
+				window.SetRelativeAtom(relLeft,otherAtom);
+				break;
+			case 1:
+				window.SetRelativeAtom(relUpL,otherAtom);
+				break;
+			case 2:
+				window.SetRelativeAtom(relUp,otherAtom);
+				break;
+			case 3:
+				window.SetRelativeAtom(relUpR,otherAtom);
+				break;
+			case 4:
+				window.SetRelativeAtom(relRight,otherAtom);
+				break;
+			case 5:
+				window.SetRelativeAtom(relDownR,otherAtom);
+				break;
+			case 6:
+				window.SetRelativeAtom(relDown,otherAtom);
+				break;
+			case 7:
+				window.SetRelativeAtom(relDownL,otherAtom);
+				break;
+		}
+	}	
+
    }
   };
 
